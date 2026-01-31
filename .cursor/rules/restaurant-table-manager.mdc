@@ -1,0 +1,58 @@
+---
+description: Core requirements and patterns for the Restaurant Table Manager WPF application
+alwaysApply: true
+---
+
+# Restaurant Table Manager - Project Guidelines
+
+## Project Overview
+
+A WPF desktop application for restaurant waiters to manage customer orders across multiple tables.
+
+## Core Features
+
+- **Table Management**: Create/remove tables with custom names
+- **Order Management**: Create orders within tables, add items (name, price, quantity)
+- **Order Completion**: Mark orders as complete
+- **Multi-Table Support**: Handle multiple active tables simultaneously
+
+## Architecture
+
+Use **MVVM pattern** with:
+- `Models/` - Data classes (Table, Order, OrderItem)
+- `ViewModels/` - Business logic and UI state
+- `Views/` - XAML UI definitions
+- `Services/` - Shared services (if needed)
+
+## Performance Requirements
+
+### UI Responsiveness
+```csharp
+// ✅ Use async/await for any potentially slow operations
+await Task.Run(() => ProcessOrder(order));
+
+// ✅ Use ObservableCollection for dynamic lists
+public ObservableCollection<Table> Tables { get; }
+
+// ❌ Never block UI thread
+Thread.Sleep(1000); // BAD
+```
+
+### Memory Efficiency
+- Use `IDisposable` for resources
+- Clear completed orders from memory when no longer needed
+- Avoid large object allocations in hot paths
+
+## UI Guidelines
+
+- Clean, minimal interface with clear visual hierarchy
+- Use consistent spacing and typography
+- Provide visual feedback for actions (loading states, confirmations)
+- Support keyboard navigation for speed
+
+## Code Standards
+
+- XML documentation on public members
+- Descriptive naming (e.g., `CompleteOrderCommand`, `ActiveTables`)
+- Keep ViewModels testable - no direct UI dependencies
+- Use `ICommand` for button actions (RelayCommand/DelegateCommand pattern)
