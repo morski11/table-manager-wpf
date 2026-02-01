@@ -35,6 +35,7 @@ public class OrderItem : INotifyPropertyChanged
             if (_price == value) return;
             _price = value;
             OnPropertyChanged(nameof(Price));
+            OnPropertyChanged(nameof(Total));
         }
     }
 
@@ -44,11 +45,16 @@ public class OrderItem : INotifyPropertyChanged
         get => _quantity;
         set
         {
-            if (_quantity == value) return;
-            _quantity = value;
+            var newValue = Math.Max(0, value);
+            if (_quantity == newValue) return;
+            _quantity = newValue;
             OnPropertyChanged(nameof(Quantity));
+            OnPropertyChanged(nameof(Total));
         }
     }
+
+    /// <summary>Total price for this line (Price * Quantity).</summary>
+    public decimal Total => Price * Quantity;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

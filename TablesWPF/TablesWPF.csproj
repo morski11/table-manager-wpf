@@ -10,4 +10,14 @@
     <AssemblyName>TablesWPF</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Xceed.Wpf.Toolkit" Version="4.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Data\products.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
