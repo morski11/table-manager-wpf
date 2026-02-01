@@ -45,7 +45,7 @@ public class OrderItem : INotifyPropertyChanged
         get => _quantity;
         set
         {
-            var newValue = Math.Max(0, value);
+            var newValue = Math.Max(1, value);
             if (_quantity == newValue) return;
             _quantity = newValue;
             OnPropertyChanged(nameof(Quantity));

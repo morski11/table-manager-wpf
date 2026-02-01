@@ -201,43 +201,73 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
     private void AddOrderItem()
     {
-        if (SelectedProduct == null)
+        try
         {
-            _dialogService.ShowMessage("No product selected", "Please select a product to add.");
-            return;
-        }
-
-        // If there's no selected order, create one for the current table.
-        if (SelectedOrder == null)
-        {
-            if (SelectedTable == null)
+            if (SelectedProduct == null)
             {
-                _dialogService.ShowMessage("No table selected", "Please select a table before adding items.");
+                _dialogService.ShowMessage("No product selected", "Please select a product to add.");
                 return;
             }
 
-            // Enforce single-order-per-table: create an order only if the table has none.
-            if (!SelectedTable.Orders.Any())
+            // If there's no selected order, create one for the current table.
+            if (SelectedOrder == null)
             {
-                var order = new Order();
-                SelectedTable.Orders.Add(order);
-                SelectedOrder = order;
+                if (SelectedTable == null)
+                {
+                    _dialogService.ShowMessage("No table selected", "Please select a table before adding items.");
+                    return;
+                }
+
+                // Enforce single-order-per-table: create an order only if the table has none.
+                if (!SelectedTable.Orders.Any())
+                {
+                    var order = new Order();
+                    SelectedTable.Orders.Add(order);
+                    SelectedOrder = order;
+                }
+                else
+                {
+                    SelectedOrder = SelectedTable.Orders.First();
+                }
+            }
+
+            // If the product already exists in the order, increase its quantity instead of adding a duplicate line.
+            var existing = SelectedOrder.OrderItems.FirstOrDefault(i => string.Equals(i.Name, SelectedProduct.Name, StringComparison.Ordinal));
+            if (existing != null)
+            {
+                existing.Quantity += 1;
+                SelectedOrderItem = existing;
             }
             else
             {
-                SelectedOrder = SelectedTable.Orders.First();
+                var item = new OrderItem
+                {
+                    Name = SelectedProduct.Name,
+                    Price = SelectedProduct.Price,
+                    Quantity = 1
+                };
+
+                SelectedOrder.OrderItems.Add(item);
+                SelectedOrderItem = item;
             }
         }
-
-        var item = new OrderItem
+        catch (Exception ex)
         {
-            Name = SelectedProduct.Name,
-            Price = SelectedProduct.Price,
-            Quantity = 1
-        };
-
-        SelectedOrder.OrderItems.Add(item);
-        SelectedOrderItem = item;
+            try
+            {
+                _dialogService.ShowMessage("Error adding item", ex.Message + "\n\n" + ex.StackTrace);
+            }
+            catch
+            {
+                // If dialog service also fails, write to debug as last resort
+                System.Diagnostics.Debug.WriteLine("Error adding item: " + ex);
+            }
+            try
+            {
+                TablesWPF.Services.FileLogger.Log("AddOrderItem exception: " + ex);
+            }
+            catch { }
+        }
     }
 
     private void RemoveOrderItem()

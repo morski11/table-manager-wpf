@@ -10,9 +10,7 @@
     <AssemblyName>TablesWPF</AssemblyName>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Xceed.Wpf.Toolkit" Version="4.8.0" />
-  </ItemGroup>
+  <!-- Removed Xceed.Wpf.Toolkit to avoid licensing requirement; using local QuantitySpinner control instead. -->
 
   <ItemGroup>
     <None Include="Data\products.json">
