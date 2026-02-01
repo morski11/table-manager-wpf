@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Windows.Input;
 using System.Text.Json;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using TablesWPF.Models;
 using TablesWPF.Services;
 
@@ -90,6 +92,21 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     /// <summary>Removes the selected order item from the selected order.</summary>
     public ICommand RemoveOrderItemCommand { get; }
 
+    private CancellationTokenSource? _statusCts;
+    private string _statusMessage = string.Empty;
+
+    /// <summary>Transient status message shown to the user for a short time.</summary>
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        private set
+        {
+            if (_statusMessage == value) return;
+            _statusMessage = value;
+            OnPropertyChanged(nameof(StatusMessage));
+        }
+    }
+
     /// <summary>
     /// Creates the ViewModel with the specified dialog service.
     /// </summary>
@@ -123,6 +140,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             var table = new Table { Name = name };
             Tables.Add(table);
             SelectedTable = table;
+            _ = ShowStatusAsync($"Created table \"{name}\"");
         }
     }
 
@@ -142,6 +160,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             }
 
             SelectedTable.Name = name;
+            _ = ShowStatusAsync($"Renamed table to \"{name}\"");
         }
     }
 
@@ -166,8 +185,10 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
         if (_dialogService.Confirm("Delete Table", $"Delete \"{SelectedTable.Name}\" and all its orders?"))
         {
+            var name = SelectedTable.Name;
             Tables.Remove(SelectedTable);
             SelectedTable = Tables.Count > 0 ? Tables[0] : null;
+            _ = ShowStatusAsync($"Deleted \"{name}\"");
         }
     }
 
@@ -232,16 +253,21 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             }
 
             // If the product already exists in the order, increase its quantity instead of adding a duplicate line.
-            var existing = SelectedOrder.OrderItems.FirstOrDefault(i => string.Equals(i.Name, SelectedProduct.Name, StringComparison.Ordinal));
+            var existing = SelectedOrder.OrderItems.FirstOrDefault(i =>
+                (i.ProductId != 0 && i.ProductId == SelectedProduct.Id) ||
+                (i.ProductId == 0 && string.Equals(i.Name, SelectedProduct.Name, StringComparison.Ordinal)));
+
             if (existing != null)
             {
                 existing.Quantity += 1;
                 SelectedOrderItem = existing;
+                _ = ShowStatusAsync($"Increased quantity of \"{existing.Name}\" to {existing.Quantity}");
             }
             else
             {
                 var item = new OrderItem
                 {
+                    ProductId = SelectedProduct.Id,
                     Name = SelectedProduct.Name,
                     Price = SelectedProduct.Price,
                     Quantity = 1
@@ -249,6 +275,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
                 SelectedOrder.OrderItems.Add(item);
                 SelectedOrderItem = item;
+                _ = ShowStatusAsync($"Added \"{item.Name}\" to order");
             }
         }
         catch (Exception ex)
@@ -273,12 +300,38 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     private void RemoveOrderItem()
     {
         if (SelectedOrder == null || SelectedOrderItem == null) return;
+        var name = SelectedOrderItem.Name;
         SelectedOrder.OrderItems.Remove(SelectedOrderItem);
         SelectedOrderItem = null;
+        _ = ShowStatusAsync($"Removed \"{name}\" from order");
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     protected virtual void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    private async Task ShowStatusAsync(string message, int milliseconds = 3000)
+    {
+        try
+        {
+            _statusCts?.Cancel();
+            _statusCts = new CancellationTokenSource();
+            StatusMessage = message;
+            var token = _statusCts.Token;
+            await Task.Delay(milliseconds, token);
+            if (!token.IsCancellationRequested)
+            {
+                StatusMessage = string.Empty;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // ignore
+        }
+        catch
+        {
+            // ignore other issues
+        }
+    }
 }

@@ -57,30 +57,51 @@
                             Cursor="Hand" />
                 </StackPanel>
 
-                <!-- Items grid for the selected order -->
-                <DataGrid ItemsSource="{Binding DataContext.SelectedOrder.OrderItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                          SelectedItem="{Binding DataContext.SelectedOrderItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          Margin="0,0,0,8"
-                          RowBackground="White"
-                          AlternatingRowBackground="#F7F7F7">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Product" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
-                        <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
-                        <DataGridTemplateColumn Header="Quantity" Width="120">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <controls:QuantitySpinner Value="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             Minimum="1"
-                                                             HorizontalAlignment="Center"
-                                                             Width="90" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                <!-- Items grid with overlaid status message -->
+                <Grid Margin="0,0,0,8">
+                    <!-- Items grid for the selected order -->
+                    <DataGrid ItemsSource="{Binding DataContext.SelectedOrder.OrderItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              SelectedItem="{Binding DataContext.SelectedOrderItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              RowBackground="White"
+                              AlternatingRowBackground="#F7F7F7">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Product" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
+                            <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
+                            <DataGridTemplateColumn Header="Quantity" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <controls:QuantitySpinner Value="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Minimum="1"
+                                                                 HorizontalAlignment="Center"
+                                                                 Width="90" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- Transient status message below the grid -->
+                <TextBlock Text="{Binding DataContext.StatusMessage, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                           Foreground="Green"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,8">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.StatusMessage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
 
                 <!-- Order total displayed under the items -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

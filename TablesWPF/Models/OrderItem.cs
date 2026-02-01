@@ -10,6 +10,7 @@ public class OrderItem : INotifyPropertyChanged
     private string _name = string.Empty;
     private decimal _price;
     private int _quantity;
+    private int _productId;
 
     /// <summary>Unique identifier for the order item.</summary>
     public Guid Id { get; } = Guid.NewGuid();
@@ -23,6 +24,18 @@ public class OrderItem : INotifyPropertyChanged
             if (_name == value) return;
             _name = value;
             OnPropertyChanged(nameof(Name));
+        }
+    }
+
+    /// <summary>Product identifier (from the product catalog).</summary>
+    public int ProductId
+    {
+        get => _productId;
+        set
+        {
+            if (_productId == value) return;
+            _productId = value;
+            OnPropertyChanged(nameof(ProductId));
         }
     }
 
