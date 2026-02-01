@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using TablesWPF.Services;
 using TablesWPF.ViewModels;
 
 namespace TablesWPF.Views;
@@ -17,6 +18,6 @@ public partial class WaiterWorkspaceView : UserControl
     private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
     {
         if (DataContext == null)
-            DataContext = new WaiterWorkspaceViewModel();
+            DataContext = new WaiterWorkspaceViewModel(new DialogService());
     }
 }

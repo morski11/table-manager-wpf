@@ -81,6 +81,20 @@
                      BorderThickness="1"
                      BorderBrush="#CCCCCC"
                      Padding="8,4" />
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,8,0,0">
+                <Button Content="Edit name"
+                        Command="{Binding EditTableCommand}"
+                        Padding="10,6"
+                        FontSize="13"
+                        Cursor="Hand" />
+                <Button Content="Delete"
+                        Command="{Binding DeleteTableCommand}"
+                        Padding="10,6"
+                        Margin="8,0,0,0"
+                        FontSize="13"
+                        Cursor="Hand" />
+            </StackPanel>
         </StackPanel>
 
         <!-- Right: Orders for selected table -->
