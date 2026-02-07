@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Text.Json;
 using System.IO;
@@ -20,12 +21,39 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     private Order? _selectedOrder;
     private OrderItem? _selectedOrderItem;
     private Product? _selectedProduct;
+    private string _productSearchText = string.Empty;
+    private ICollectionView? _productsView;
 
     /// <summary>All tables in the workspace.</summary>
     public ObservableCollection<Table> Tables { get; } = new();
 
     /// <summary>Available products loaded from JSON.</summary>
     public ObservableCollection<Product> Products { get; } = new();
+
+    /// <summary>Filtered view of products for the ComboBox.</summary>
+    public ICollectionView? ProductsView
+    {
+        get => _productsView;
+        private set
+        {
+            if (_productsView == value) return;
+            _productsView = value;
+            OnPropertyChanged(nameof(ProductsView));
+        }
+    }
+
+    /// <summary>Search text typed into the product ComboBox for filtering.</summary>
+    public string ProductSearchText
+    {
+        get => _productSearchText;
+        set
+        {
+            if (_productSearchText == value) return;
+            _productSearchText = value;
+            OnPropertyChanged(nameof(ProductSearchText));
+            ProductsView?.Refresh();
+        }
+    }
 
     /// <summary>Currently selected product in the product picker.</summary>
     public Product? SelectedProduct
@@ -212,12 +240,26 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
             Products.Clear();
             foreach (var p in docs) Products.Add(p);
+
+            ProductsView = CollectionViewSource.GetDefaultView(Products);
+            ProductsView.Filter = FilterProducts;
             SelectedProduct = Products.FirstOrDefault();
         }
         catch
         {
             // swallow load errors for now
         }
+    }
+
+    /// <summary>
+    /// Filter predicate for the products collection view.
+    /// Shows products whose name contains the search text (case-insensitive).
+    /// </summary>
+    private bool FilterProducts(object obj)
+    {
+        if (obj is not Product product) return false;
+        if (string.IsNullOrEmpty(_productSearchText)) return true;
+        return product.Name.Contains(_productSearchText, StringComparison.CurrentCultureIgnoreCase);
     }
 
     private void AddOrderItem()
@@ -277,6 +319,10 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
                 SelectedOrderItem = item;
                 _ = ShowStatusAsync($"Added \"{item.Name}\" to order");
             }
+
+            // Clear the ComboBox so the waiter can start a fresh search
+            SelectedProduct = null;
+            ProductSearchText = string.Empty;
         }
         catch (Exception ex)
         {

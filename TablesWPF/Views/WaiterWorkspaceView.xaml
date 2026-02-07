@@ -40,9 +40,14 @@
                 <!-- Product picker + actions (bound to VM via DataContext on UserControl) -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <ComboBox Width="320"
-                              ItemsSource="{Binding DataContext.Products, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                              IsEditable="True"
+                              IsTextSearchEnabled="False"
+                              StaysOpenOnEdit="True"
+                              ItemsSource="{Binding DataContext.ProductsView, RelativeSource={RelativeSource AncestorType=UserControl}}"
                               SelectedItem="{Binding DataContext.SelectedProduct, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                              Text="{Binding DataContext.ProductSearchText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               DisplayMemberPath="Name"
+                              PreviewTextInput="ProductComboBox_PreviewTextInput"
                               Margin="0,0,8,0" />
                     <Button Content="Add"
                             Command="{Binding DataContext.AddOrderItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

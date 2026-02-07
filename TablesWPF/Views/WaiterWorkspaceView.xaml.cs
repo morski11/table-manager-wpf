@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Input;
 using TablesWPF.Services;
 using TablesWPF.ViewModels;
 
@@ -19,5 +20,16 @@ public partial class WaiterWorkspaceView : UserControl
     {
         if (DataContext == null)
             DataContext = new WaiterWorkspaceViewModel(new DialogService());
+    }
+
+    /// <summary>
+    /// Opens the ComboBox dropdown when the user starts typing directly in the field.
+    /// </summary>
+    private void ProductComboBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (sender is ComboBox comboBox)
+        {
+            comboBox.IsDropDownOpen = true;
+        }
     }
 }
