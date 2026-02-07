@@ -24,8 +24,39 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     private string _productSearchText = string.Empty;
     private ICollectionView? _productsView;
 
-    /// <summary>All tables in the workspace.</summary>
-    public ObservableCollection<Table> Tables { get; } = new();
+    /// <summary>Open (active) tables in the workspace.</summary>
+    public ObservableCollection<Table> OpenTables { get; } = new();
+
+    /// <summary>Completed tables (read-only history).</summary>
+    public ObservableCollection<Table> CompletedTables { get; } = new();
+
+    private int _tablesTabIndex;
+
+    /// <summary>Selected tab index for the tables view (0=open, 1=completed).</summary>
+    public int TablesTabIndex
+    {
+        get => _tablesTabIndex;
+        set
+        {
+            if (_tablesTabIndex == value) return;
+            _tablesTabIndex = value;
+            OnPropertyChanged(nameof(TablesTabIndex));
+
+            if (value == 0)
+            {
+                if (SelectedTable == null || !OpenTables.Contains(SelectedTable))
+                    SelectedTable = OpenTables.Count > 0 ? OpenTables[0] : null;
+            }
+            else if (value == 1)
+            {
+                if (SelectedTable == null || !CompletedTables.Contains(SelectedTable))
+                    SelectedTable = CompletedTables.Count > 0 ? CompletedTables[0] : null;
+            }
+        }
+    }
+
+    /// <summary>True when the current SelectedTable is an open table and can be modified.</summary>
+    public bool CanModifySelectedTable => SelectedTable != null && OpenTables.Contains(SelectedTable);
 
     /// <summary>Available products loaded from JSON.</summary>
     public ObservableCollection<Product> Products { get; } = new();
@@ -64,6 +95,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             if (_selectedProduct == value) return;
             _selectedProduct = value;
             OnPropertyChanged(nameof(SelectedProduct));
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -76,6 +108,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             if (_selectedOrder == value) return;
             _selectedOrder = value;
             OnPropertyChanged(nameof(SelectedOrder));
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -88,6 +121,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             if (_selectedOrderItem == value) return;
             _selectedOrderItem = value;
             OnPropertyChanged(nameof(SelectedOrderItem));
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -99,9 +133,13 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
         {
             if (_selectedTable == value) return;
             _selectedTable = value;
-            // When a table is selected, ensure SelectedOrder points to its single order (if any)
+
             SelectedOrder = _selectedTable?.Orders.FirstOrDefault();
+            SelectedOrderItem = null;
+
             OnPropertyChanged(nameof(SelectedTable));
+            OnPropertyChanged(nameof(CanModifySelectedTable));
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 
@@ -113,7 +151,10 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
     /// <summary>Command to delete the selected table.</summary>
     public ICommand DeleteTableCommand { get; }
-    
+
+    /// <summary>Command to complete the selected table (moves it to completed).</summary>
+    public ICommand CompleteTableCommand { get; }
+
     /// <summary>Adds selected product to the selected order.</summary>
     public ICommand AddOrderItemCommand { get; }
 
@@ -144,10 +185,11 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         CreateTableCommand = new RelayCommand(CreateTable);
-        EditTableCommand = new RelayCommand(EditTable, () => SelectedTable != null);
-        DeleteTableCommand = new RelayCommand(DeleteTable, () => SelectedTable != null);
-        AddOrderItemCommand = new RelayCommand(AddOrderItem);
-        RemoveOrderItemCommand = new RelayCommand(RemoveOrderItem);
+        EditTableCommand = new RelayCommand(EditTable, () => CanModifySelectedTable);
+        DeleteTableCommand = new RelayCommand(DeleteTable, () => CanModifySelectedTable);
+        CompleteTableCommand = new RelayCommand(CompleteTable, () => CanModifySelectedTable && SelectedOrder?.OrderItems.Any() == true);
+        AddOrderItemCommand = new RelayCommand(AddOrderItem, () => CanModifySelectedTable);
+        RemoveOrderItemCommand = new RelayCommand(RemoveOrderItem, () => CanModifySelectedTable && SelectedOrderItem != null);
 
         _ = LoadProductsAsync();
     }
@@ -166,7 +208,8 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
             }
 
             var table = new Table { Name = name };
-            Tables.Add(table);
+            OpenTables.Add(table);
+            TablesTabIndex = 0;
             SelectedTable = table;
             _ = ShowStatusAsync($"Created table \"{name}\"");
         }
@@ -200,7 +243,7 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     /// <returns>True if a table with this name exists; false otherwise.</returns>
     private bool TableNameExists(string name, Table? excludeTable = null)
     {
-        return Tables.Any(t => t != excludeTable && 
+        return OpenTables.Any(t => t != excludeTable &&
             string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -209,15 +252,39 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     /// </summary>
     private void DeleteTable()
     {
-        if (SelectedTable == null) return;
+        if (!CanModifySelectedTable || SelectedTable == null) return;
 
         if (_dialogService.Confirm("Delete Table", $"Delete \"{SelectedTable.Name}\" and all its orders?"))
         {
             var name = SelectedTable.Name;
-            Tables.Remove(SelectedTable);
-            SelectedTable = Tables.Count > 0 ? Tables[0] : null;
+            OpenTables.Remove(SelectedTable);
+            TablesTabIndex = 0;
+            SelectedTable = OpenTables.Count > 0 ? OpenTables[0] : null;
             _ = ShowStatusAsync($"Deleted \"{name}\"");
+            CommandManager.InvalidateRequerySuggested();
         }
+    }
+
+    private void CompleteTable()
+    {
+        if (!CanModifySelectedTable || SelectedTable == null) return;
+
+        if (SelectedOrder?.OrderItems.Any() != true)
+        {
+            _dialogService.ShowMessage("Cannot complete", "Add at least one item before completing the table.");
+            return;
+        }
+
+        var table = SelectedTable;
+
+        OpenTables.Remove(table);
+        CompletedTables.Add(table);
+
+        TablesTabIndex = 1;
+        OnPropertyChanged(nameof(CanModifySelectedTable));
+        CommandManager.InvalidateRequerySuggested();
+
+        _ = ShowStatusAsync($"Completed \"{table.Name}\"");
     }
 
     private async Task LoadProductsAsync()
@@ -266,6 +333,8 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
     {
         try
         {
+            if (!CanModifySelectedTable) return;
+
             if (SelectedProduct == null)
             {
                 _dialogService.ShowMessage("No product selected", "Please select a product to add.");
@@ -345,11 +414,14 @@ public class WaiterWorkspaceViewModel : INotifyPropertyChanged
 
     private void RemoveOrderItem()
     {
+        if (!CanModifySelectedTable) return;
         if (SelectedOrder == null || SelectedOrderItem == null) return;
+
         var name = SelectedOrderItem.Name;
         SelectedOrder.OrderItems.Remove(SelectedOrderItem);
         SelectedOrderItem = null;
         _ = ShowStatusAsync($"Removed \"{name}\" from order");
+        CommandManager.InvalidateRequerySuggested();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

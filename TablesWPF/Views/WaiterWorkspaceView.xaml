@@ -5,18 +5,19 @@
              xmlns:controls="clr-namespace:TablesWPF.Controls">
     <UserControl.Resources>
         <!-- Content when a table is selected: orders list or empty state -->
-        <DataTemplate x:Key="TableOrdersTemplate" DataType="{x:Type models:Table}">
+        <DataTemplate x:Key="TableOrdersTemplate"
+                      DataType="{x:Type models:Table}">
             <StackPanel>
                 <TextBlock Text="Orders"
                            FontWeight="SemiBold"
                            FontSize="13"
-                           Margin="0,0,0,8" />
+                           Margin="0,0,0,8"/>
 
                 <!-- Selected table name -->
                 <TextBlock Text="{Binding Name}"
                            FontWeight="Bold"
                            FontSize="14"
-                           Margin="0,0,0,8" />
+                           Margin="0,0,0,8"/>
 
                 <TextBlock Text="No orders for this table"
                            Foreground="#666"
@@ -24,10 +25,13 @@
                            Margin="0,8,0,0">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Visibility"
+                                    Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Orders.Count}" Value="0">
-                                    <Setter Property="Visibility" Value="Visible" />
+                                <DataTrigger Binding="{Binding Orders.Count}"
+                                             Value="0">
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -38,8 +42,10 @@
                 <!-- When the table has no orders the "No orders for this table" message above will be visible. -->
 
                 <!-- Product picker + actions (bound to VM via DataContext on UserControl) -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,0,0,8">
                     <ComboBox Width="320"
+                              IsEnabled="{Binding DataContext.CanModifySelectedTable, RelativeSource={RelativeSource AncestorType=UserControl}}"
                               IsEditable="True"
                               IsTextSearchEnabled="False"
                               StaysOpenOnEdit="True"
@@ -48,43 +54,58 @@
                               Text="{Binding DataContext.ProductSearchText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               DisplayMemberPath="Name"
                               PreviewTextInput="ProductComboBox_PreviewTextInput"
-                              Margin="0,0,8,0" />
+                              Margin="0,0,8,0"/>
                     <Button Content="Add"
                             Command="{Binding DataContext.AddOrderItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Padding="10,6"
                             FontSize="13"
-                            Cursor="Hand" />
-                    <Button Content="Remove"
+                            Cursor="Hand"
+                            IsEnabled="{Binding DataContext.CanModifySelectedTable, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+                        <Button Content="Remove"
                             Command="{Binding DataContext.RemoveOrderItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            IsEnabled="{Binding DataContext.CanModifySelectedTable, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             Padding="10,6"
                             Margin="8,0,0,0"
                             FontSize="13"
-                            Cursor="Hand" />
+                            Cursor="Hand"/>
                 </StackPanel>
 
                 <!-- Items grid with overlaid status message -->
                 <Grid Margin="0,0,0,8">
                     <!-- Items grid for the selected order -->
-                    <DataGrid ItemsSource="{Binding DataContext.SelectedOrder.OrderItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                              SelectedItem="{Binding DataContext.SelectedOrderItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              RowBackground="White"
-                              AlternatingRowBackground="#F7F7F7">
+                    <DataGrid
+                        IsEnabled="{Binding DataContext.CanModifySelectedTable, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        ItemsSource="{Binding DataContext.SelectedOrder.OrderItems, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        SelectedItem="{Binding DataContext.SelectedOrderItem, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        RowBackground="White"
+                        AlternatingRowBackground="#F7F7F7">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Product" Binding="{Binding Name}" IsReadOnly="True" Width="*" />
-                            <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
-                            <DataGridTemplateColumn Header="Quantity" Width="120">
+                            <DataGridTextColumn Header="Product"
+                                                Binding="{Binding Name}"
+                                                IsReadOnly="True"
+                                                Width="*"/>
+                            <DataGridTextColumn Header="Price"
+                                                Binding="{Binding Price, StringFormat='{}{0:F2} €'}"
+                                                IsReadOnly="True"
+                                                Width="110"/>
+                            <DataGridTemplateColumn Header="Quantity"
+                                                    Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <controls:QuantitySpinner Value="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                 Minimum="1"
-                                                                 HorizontalAlignment="Center"
-                                                                 Width="90" />
+                                                                  Minimum="1"
+                                                                  HorizontalAlignment="Center"
+                                                                  Width="90"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat='{}{0:F2} €'}" IsReadOnly="True" Width="110" />
+                            <DataGridTextColumn Header="Total"
+                                                Binding="{Binding Total, StringFormat='{}{0:F2} €'}"
+                                                IsReadOnly="True"
+                                                Width="110"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -98,10 +119,13 @@
                            Margin="0,0,0,8">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Visible" />
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.StatusMessage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="">
-                                    <Setter Property="Visibility" Value="Collapsed" />
+                                <DataTrigger Binding="{Binding DataContext.StatusMessage, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             Value="">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -109,53 +133,95 @@
                 </TextBlock>
 
                 <!-- Order total displayed under the items -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <TextBlock Text="Order total: " FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding DataContext.SelectedOrder.Total, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat='{}{0:F2} €'}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <TextBlock Text="Order total: "
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DataContext.SelectedOrder.Total, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat='{}{0:F2} €'}"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,8,0,0">
+                    <Button Content="Complete"
+                            Command="{Binding DataContext.CompleteTableCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Padding="12,8"
+                            FontSize="13"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.CanModifySelectedTable, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" MinWidth="200" />
-            <ColumnDefinition Width="*" MinWidth="240" />
+            <ColumnDefinition Width="280"
+                              MinWidth="200"/>
+            <ColumnDefinition Width="*"
+                              MinWidth="240"/>
         </Grid.ColumnDefinitions>
 
         <!-- Left: Create table + table list -->
-        <StackPanel Grid.Column="0" Margin="0,0,16,0">
-            <Button Content="Create table"
-                    Command="{Binding CreateTableCommand}"
-                    Padding="12,8"
-                    Margin="0,0,0,12"
-                    FontSize="14"
-                    Cursor="Hand" />
-            <TextBlock Text="Tables"
-                       FontWeight="SemiBold"
-                       FontSize="13"
-                       Margin="0,0,0,6" />
-            <ListBox ItemsSource="{Binding Tables}"
-                     SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
-                     DisplayMemberPath="Name"
-                     MinHeight="200"
-                     BorderThickness="1"
-                     BorderBrush="#CCCCCC"
-                     Padding="8,4" />
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,8,0,0">
-                <Button Content="Edit name"
-                        Command="{Binding EditTableCommand}"
-                        Padding="10,6"
-                        FontSize="13"
-                        Cursor="Hand" />
-                <Button Content="Delete"
-                        Command="{Binding DeleteTableCommand}"
-                        Padding="10,6"
-                        Margin="8,0,0,0"
-                        FontSize="13"
-                        Cursor="Hand" />
-            </StackPanel>
-        </StackPanel>
+        <TabControl Grid.Column="0"
+                    Margin="0,0,16,0"
+                    SelectedIndex="{Binding TablesTabIndex, Mode=TwoWay}">
+            <TabItem Header="Open Tables">
+                <StackPanel Margin="0,12,0,0">
+                    <Button Content="Create table"
+                            Command="{Binding CreateTableCommand}"
+                            Padding="12,8"
+                            Margin="0,0,0,12"
+                            FontSize="14"
+                            Cursor="Hand"/>
+                    <ListBox ItemsSource="{Binding OpenTables}"
+                             SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
+                             DisplayMemberPath="Name"
+                             MinHeight="200"
+                             BorderThickness="1"
+                             BorderBrush="#CCCCCC"
+                             Padding="8,4"/>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="0,8,0,0">
+                        <Button Content="Edit name"
+                                Command="{Binding EditTableCommand}"
+                                Padding="10,6"
+                                FontSize="13"
+                                Cursor="Hand"/>
+                        <Button Content="Delete"
+                                Command="{Binding DeleteTableCommand}"
+                                Padding="10,6"
+                                Margin="8,0,0,0"
+                                FontSize="13"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Completed Tables">
+                <StackPanel Margin="0,12,0,0">
+                    <ListBox ItemsSource="{Binding CompletedTables}"
+                             SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
+                             DisplayMemberPath="Name"
+                             MinHeight="200"
+                             BorderThickness="1"
+                             BorderBrush="#CCCCCC"
+                             Padding="8,4"/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
 
         <!-- Right: Orders for selected table -->
         <Border Grid.Column="1"
@@ -172,10 +238,13 @@
                            FontSize="14">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Setter Property="Visibility"
+                                    Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTable}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Visible" />
+                                <DataTrigger Binding="{Binding SelectedTable}"
+                                             Value="{x:Null}">
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -186,10 +255,13 @@
                                 ContentTemplate="{StaticResource TableOrdersTemplate}">
                     <ContentControl.Style>
                         <Style TargetType="ContentControl">
-                            <Setter Property="Visibility" Value="Visible" />
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedTable}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed" />
+                                <DataTrigger Binding="{Binding SelectedTable}"
+                                             Value="{x:Null}">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
